@@ -6,7 +6,7 @@ export namespace Attributes {
   };
 
   export type Import = {
-    src: "csv" | "pull";
+    src: "file" | "pull";
     comment: string | null;
     timestampMs: number;
   };
@@ -14,7 +14,7 @@ export namespace Attributes {
   export type Transaction = {
     status: "cleared" | "pending";
     amountBaseUnits: number;
-    reconciledBaseUnits: number;
+    balanceBaseUnits: number;
     description: string;
     timestampMs: number;
     recordedMs: number;
@@ -51,7 +51,7 @@ export namespace Mq {
       id: string;
       status: "cleared" | "pending";
       amountBaseUnits: number;
-      reconciledBaseUnits: number;
+      balanceBaseUnits: number;
       description: string;
       timestampMs: number;
       recordedMs: number;

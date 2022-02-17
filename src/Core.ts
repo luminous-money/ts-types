@@ -16,7 +16,6 @@ export namespace Attributes {
   export type ExpectedTransaction = {
     amountBaseUnits: number;
     timestampMs: number;
-    skipped: number;
   };
 
   export type MatchingRule = {
@@ -111,6 +110,7 @@ export namespace Attributes {
 
   export type Split = {
     amountBaseUnits: number;
+    timestampMs: number;
   };
 
   export type User = {
@@ -128,11 +128,18 @@ export namespace Attributes {
   export type VirtualAccount = {
     type: VirtualAccountTypes;
     name: string;
+    targetDateMs: number | null;
   };
 
-  export type VirtualTransaction = {
+  export type Transaction = {
     description: string | null;
     timestampMs: number;
+    amountBaseUnits: number;
+    balanceBaseUnits: number;
+    splits: Array<{
+      amountBaseUnits: number;
+      virtualAccountId: string;
+    }>;
   };
 }
 
@@ -152,8 +159,9 @@ export namespace Api {
   export type ExpectedTransaction = Attributes.ExpectedTransaction & {
     id: string;
     type: "expected-transactions";
+    skipped: boolean;
     recurringTransaction: { data: { id: string; type: "recurring-transactions" } };
-    fulfilledBy: { data: { id: string; type: "virtual-transactions" } | null };
+    fulfilledBy: { data: { id: string; type: "transactions" } | null };
   };
 
   export type MatchingRule = Attributes.MatchingRule & {
@@ -178,7 +186,7 @@ export namespace Api {
   export type MessageThread = Attributes.MessageThread & {
     id: string;
     type: "message-threads";
-    virtualTransaction: ApiTypes.ToOneRelationship<"virtual-transactions", "nullable">;
+    transaction: ApiTypes.ToOneRelationship<"transactions", "nullable">;
     lastMessage: { data: Message };
   };
 
@@ -211,7 +219,7 @@ export namespace Api {
   export type Split = Attributes.Split & {
     id: string;
     type: "splits";
-    virtualTransaction: ApiTypes.ToOneRelationship<"virtual-transactions">;
+    transaction: ApiTypes.ToOneRelationship<"transactions">;
     virtualAccount: ApiTypes.ToOneRelationship<"virtual-accounts">;
   };
 
@@ -225,14 +233,18 @@ export namespace Api {
   export type VirtualAccount = Attributes.VirtualAccount & {
     id: string;
     critical: boolean;
-    targetDateMs: number | null;
     cashAccount: ApiTypes.ToOneRelationship<"cash-accounts">;
   };
+  export type VirtualAccountBalance = {
+    type: "account-balances";
+    clearedBaseUnits: number;
+    pendingBaseUnits: number;
+  };
 
-  export type VirtualTransaction = Attributes.VirtualTransaction & {
+  export type Transaction = Attributes.Transaction & {
     id: string;
-    type: "virtual-transactions";
-    splits: ApiTypes.ToManyRelationship<"splits">;
+    type: "transactions";
+    cashAccount: ApiTypes.ToOneRelationship<"cash-accounts">;
   };
 
   export type Resource =
@@ -248,5 +260,5 @@ export namespace Api {
     | Split
     | User
     | VirtualAccount
-    | VirtualTransaction;
+    | Transaction;
 }

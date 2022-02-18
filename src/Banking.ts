@@ -3,6 +3,7 @@ import { Api as ApiTypes } from "@wymp/types";
 export namespace Attributes {
   export type BankingProvider = {
     name: string;
+    provider: string;
   };
 
   export type Import = {
@@ -18,6 +19,7 @@ export namespace Attributes {
     description: string;
     timestampMs: number;
     recordedMs: number;
+    dayTxIndex: number;
   };
 }
 
@@ -55,6 +57,7 @@ export namespace Mq {
       description: string;
       timestampMs: number;
       recordedMs: number;
+      dayTxIndex: number;
       accountId: string;
       meta: object;
       importId: string;

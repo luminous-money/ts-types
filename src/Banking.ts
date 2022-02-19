@@ -60,6 +60,7 @@ export namespace Mq {
       dayTxIndex: number;
       accountId: string;
       meta: object;
+      uniqueHash: string;
       importId: string;
     };
   };

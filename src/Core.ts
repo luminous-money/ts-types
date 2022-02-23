@@ -1,5 +1,26 @@
 import { Api as ApiTypes } from "@wymp/types";
 
+export type TemplateTransaction = {
+  /** The description to use for the created transaction */
+  description: string;
+
+  /** An array of tags to apply to the created transaction */
+  tags: Array<string>;
+
+  /** An array of splits that define the created transaction */
+  splits: Array<{
+    /** The virtual account id of this split */
+    virtualAccountId: string;
+
+    /**
+     * The percentage of the total amount that this split represents (100% == 100). The total of
+     * all splits of a given sign (+/-) should add up to 100, and the sum of all splits should be
+     * 0.
+     */
+    amountPerc: number;
+  }>;
+};
+
 export namespace Attributes {
   export type CashAccount = {
     type: "debit-accounts" | "credit-accounts";
@@ -11,11 +32,6 @@ export namespace Attributes {
   export type EmailAddress = {
     email: string;
     verifiedMs: number;
-  };
-
-  export type ExpectedTransaction = {
-    amountBaseUnits: number;
-    timestampMs: number;
   };
 
   export type MatchingRule = {
@@ -39,31 +55,31 @@ export namespace Attributes {
   };
 
   export type DailyRecurrence = {
-    type: "day";
-    unitInterval: number;
-    startTimeMs: number;
+    rectype: "day";
+    recUnitInterval: number;
+    recStartTimeMs: number;
   };
 
   export type WeeklyRecurrence = {
-    type: "week";
-    unitInterval: number;
-    unitDayList: string;
-    startTimeMs: number;
+    recType: "week";
+    recUnitInterval: number;
+    recUnitDayList: string;
+    recStartTimeMs: number;
   };
 
   export type MonthlyRecurrence = {
-    type: "month";
-    unitInterval: number;
-    unitDayList: string;
-    startTimeMs: number;
+    recType: "month";
+    recUnitInterval: number;
+    recUnitDayList: string;
+    recStartTimeMs: number;
   };
 
   export type YearlyRecurrence = {
-    type: "year";
-    unitInterval: number;
-    unitDayList: string;
-    months: string;
-    startTimeMs: number;
+    recType: "year";
+    recUnitInterval: number;
+    recUnitDayList: string;
+    recMonths: string;
+    recStartTimeMs: number;
   };
 
   export type Recurrence =
@@ -72,31 +88,25 @@ export namespace Attributes {
     | MonthlyRecurrence
     | YearlyRecurrence;
 
-  export type FixedRecurringTransaction = {
-    amountBaseUnits: number;
+  export type FixedRecurringTransaction = Recurrence & {
     name: string;
+    templateJson: string;
     type: "fixed";
-    suggested: number;
-    accepted: number | null;
   };
 
-  export type AdaptiveEstimatedRecurringTransaction = {
-    amountBaseUnits: number;
+  export type AdaptiveEstimatedRecurringTransaction = Recurrence & {
     name: string;
+    templateJson: string;
     type: "adaptive";
     nature: "estimated";
     scope: "seasonal" | "trailing";
-    suggested: number;
-    accepted: number;
   };
 
-  export type AdaptiveExactRecurringTransaction = {
-    amountBaseUnits: number;
+  export type AdaptiveExactRecurringTransaction = Recurrence & {
     name: string;
+    templateJson: string;
     type: "adaptive";
     nature: "exact";
-    suggested: number;
-    accepted: number;
   };
 
   export type RecurringTransaction =
@@ -131,16 +141,36 @@ export namespace Attributes {
     targetDateMs: number | null;
   };
 
-  export type Transaction = {
+  type BaseTransaction = {
     description: string | null;
     timestampMs: number;
     amountBaseUnits: number;
-    balanceBaseUnits: number;
     splits: Array<{
       amountBaseUnits: number;
       virtualAccountId: string;
     }>;
   };
+  export type ExpectedTransaction = BaseTransaction & {
+    status: "expected";
+    balanceBaseUnits: number | null;
+  };
+  export type SkippedExpectedTransaction = BaseTransaction & {
+    status: "skipped-expected";
+    balanceBaseUnits: number | null;
+  };
+  export type PendingTransaction = BaseTransaction & {
+    status: "pending";
+    balanceBaseUnits: number | null;
+  };
+  export type ClearedTransaction = BaseTransaction & {
+    status: "cleared";
+    balanceBaseUnits: number;
+  };
+  export type Transaction =
+    | ExpectedTransaction
+    | SkippedExpectedTransaction
+    | PendingTransaction
+    | ClearedTransaction;
 }
 
 export namespace Api {
@@ -154,14 +184,6 @@ export namespace Api {
   export type EmailAddress = Attributes.EmailAddress & {
     type: "email-addresses";
     user: ApiTypes.ToOneRelationship<"users">;
-  };
-
-  export type ExpectedTransaction = Attributes.ExpectedTransaction & {
-    id: string;
-    type: "expected-transactions";
-    skipped: boolean;
-    recurringTransaction: { data: { id: string; type: "recurring-transactions" } };
-    fulfilledBy: { data: { id: string; type: "transactions" } | null };
   };
 
   export type MatchingRule = Attributes.MatchingRule & {
@@ -245,12 +267,12 @@ export namespace Api {
     id: string;
     type: "transactions";
     cashAccount: ApiTypes.ToOneRelationship<"cash-accounts">;
+    recurringTransaction: ApiTypes.ToOneRelationship<"cash-accounts", "nullable">;
   };
 
   export type Resource =
     | CashAccount
     | EmailAddress
-    | ExpectedTransaction
     | MatchingRule
     | Membership
     | Message

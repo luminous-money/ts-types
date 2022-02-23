@@ -145,6 +145,7 @@ export namespace Attributes {
     description: string | null;
     timestampMs: number;
     amountBaseUnits: number;
+    serialNumber: number;
     splits: Array<{
       amountBaseUnits: number;
       virtualAccountId: string;

@@ -45,23 +45,20 @@ export namespace Api {
 }
 
 export namespace Mq {
-  export type Transaction = {
+  export type Import = {
     domain: "banking";
-    action: "created" | "updated" | "deleted";
-    resource: {
-      t: "transactions";
+    action: "created";
+    resource: Attributes.Import & {
+      t: "imports";
       id: string;
-      status: "cleared" | "pending";
-      amountBaseUnits: number;
-      balanceBaseUnits: number;
-      description: string;
-      timestampMs: number;
-      recordedMs: number;
-      dayTxIndex: number;
       accountId: string;
-      meta: object;
-      uniqueHash: string;
-      importId: string;
+      transactions: Array<
+        Attributes.Transaction & {
+          id: string;
+          meta: object;
+          uniqueHash: string;
+        }
+      >;
     };
   };
 }

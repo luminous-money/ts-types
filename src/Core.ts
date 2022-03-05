@@ -27,6 +27,7 @@ export namespace Attributes {
     name: string;
     currencyId: string;
     accountNum: string;
+    balanceBaseUnits: string;
   };
 
   export type EmailAddress = {
@@ -139,6 +140,8 @@ export namespace Attributes {
     type: VirtualAccountTypes;
     name: string;
     targetDateMs: number | null;
+    targetAmountBaseUnits: number | null;
+    balanceBaseUnits: number;
   };
 
   type BaseTransaction = {
@@ -159,19 +162,11 @@ export namespace Attributes {
     status: "skipped-expected";
     balanceBaseUnits: number | null;
   };
-  export type PendingTransaction = BaseTransaction & {
-    status: "pending";
-    balanceBaseUnits: number | null;
-  };
   export type ClearedTransaction = BaseTransaction & {
     status: "cleared";
     balanceBaseUnits: number;
   };
-  export type Transaction =
-    | ExpectedTransaction
-    | SkippedExpectedTransaction
-    | PendingTransaction
-    | ClearedTransaction;
+  export type Transaction = ExpectedTransaction | SkippedExpectedTransaction | ClearedTransaction;
 }
 
 export namespace Api {
@@ -255,13 +250,7 @@ export namespace Api {
 
   export type VirtualAccount = Attributes.VirtualAccount & {
     id: string;
-    critical: boolean;
     cashAccount: ApiTypes.ToOneRelationship<"cash-accounts">;
-  };
-  export type VirtualAccountBalance = {
-    type: "account-balances";
-    clearedBaseUnits: number;
-    pendingBaseUnits: number;
   };
 
   export type Transaction = Attributes.Transaction & {

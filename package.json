@@ -1,6 +1,6 @@
 {
   "name": "@luminous-money/types",
-  "version": "1.0.0-beta13",
+  "version": "1.0.0-beta14",
   "description": "Types for the Luminous Money ecosystem",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

@@ -27,7 +27,7 @@ export namespace Attributes {
     name: string;
     currencyId: string;
     accountNum: string;
-    balanceBaseUnits: string;
+    balanceBaseUnits: number;
   };
 
   export type EmailAddress = {

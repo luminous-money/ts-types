@@ -26,10 +26,16 @@ export type MatchingRule = {
     centerBaseUnits: number;
     radiusBaseUnits: number;
   };
-  template: {
-    splits: Array<SplitTemplate>;
-    tags?: Array<string>;
-  };
+  template: TransactionTemplate;
+};
+
+/**
+ * A template for a transaction
+ */
+export type TransactionTemplate = {
+  description?: string;
+  splits: Array<SplitTemplate>;
+  tags?: Array<string>;
 };
 
 /**
@@ -55,7 +61,7 @@ export type SplitTemplate = {
  * A selection of transactions. This may be either a set of search criteria or a concrete set of
  * transaction ids.
  */
-export type Selection =
+export type TransactionSelection =
   | {
       t: "search";
       date?: {
@@ -196,29 +202,25 @@ export namespace Attributes {
     balanceBaseUnits: number;
   };
 
-  type BaseTransaction = {
-    description: string | null;
+  export type Transaction = {
+    description: string;
     timestampMs: number;
     amountBaseUnits: number;
+    balanceBaseUnits: number;
     serialNumber: number;
     splits: Array<{
       amountBaseUnits: number;
       virtualAccountId: string;
     }>;
   };
-  export type ExpectedTransaction = BaseTransaction & {
-    status: "expected";
-    balanceBaseUnits: number | null;
+
+  export type ExpectedTransaction = {
+    status: "open" | "matched" | "skipped";
+    description: string | null;
+    amountBaseUnits: number;
+    timestampMs: number;
+    matchingRule: MatchingRule;
   };
-  export type SkippedExpectedTransaction = BaseTransaction & {
-    status: "skipped-expected";
-    balanceBaseUnits: number | null;
-  };
-  export type ClearedTransaction = BaseTransaction & {
-    status: "cleared";
-    balanceBaseUnits: number;
-  };
-  export type Transaction = ExpectedTransaction | SkippedExpectedTransaction | ClearedTransaction;
 }
 
 export namespace Api {
@@ -309,12 +311,20 @@ export namespace Api {
     id: string;
     type: "transactions";
     cashAccount: ApiTypes.ToOneRelationship<"cash-accounts">;
-    recurringTransaction: ApiTypes.ToOneRelationship<"recurring-transactions", "nullable">;
+    expectedTx: ApiTypes.ToOneRelationship<"expected-transactions", "nullable">;
+  };
+
+  export type ExpectedTransaction = Attributes.ExpectedTransaction & {
+    id: string;
+    type: "expected-transactions";
+    cashAccount: ApiTypes.ToOneRelationship<"cash-accounts">;
+    recurringTx: ApiTypes.ToOneRelationship<"recurring-transactions", "nullable">;
   };
 
   export type Resource =
     | CashAccount
     | EmailAddress
+    | ExpectedTransaction
     | MatchingRule
     | Membership
     | Message
@@ -404,11 +414,10 @@ export namespace Api {
     ["POST /transactions"]: {
       tx: {
         type: "transactions";
-        status: "expected" | "cleared";
-        description?: string;
+        description: string;
         timestampMs?: number;
         amountBaseUnits: number;
-        balanceBaseUnits?: number;
+        balanceBaseUnits: number;
         splits: Array<{
           virtualAccountId: string;
           amountBaseUnits: number;
@@ -431,26 +440,39 @@ export namespace Api {
     };
 
     ["PATCH /transactions/:id"]: {
-      tx: {
-        type: "transactions";
-        description?: string;
-        splits?: Array<SplitTemplate>;
-      };
+      tx: TransactionTemplate & { type: "transaction-templates" };
       rx: Transaction;
     };
 
     ["POST /transactions/bulk-edit"]: {
       tx: {
-        transaction: {
-          type: "transactions";
-          description?: string;
-          splits?: Array<SplitTemplate>;
-        };
-        selection: Selection;
+        transaction: TransactionTemplate & { type: "transaction-templates" };
+        selection: TransactionSelection;
       };
       rx: {
         type: "warnings";
         warnings: Array<string>;
+      };
+    };
+
+    /**
+     * Expected Transactions
+     */
+
+    ["POST /expected-transactions"]: {
+      tx: {
+        type: "expected-transactions";
+        description: string;
+        timestampMs: number;
+        amountBaseUnits: number;
+        matchingRule: MatchingRule;
+      };
+      rx: ExpectedTransaction;
+    };
+
+    ["GET /expected-transactions"]: {
+      filter: {
+        status?: ExpectedTransaction["status"];
       };
     };
   };

@@ -492,5 +492,21 @@ export namespace Api {
         startTimeMs: ["<" | ">" | "=" | "<=" | ">=", number];
       };
     };
+
+    ["POST /cash-accounts/:id/recurring-transactions/process"]: {
+      tx: {
+        type: "recurring-tx-process-limits";
+        untilMs: number;
+      };
+      rx: null;
+    };
+
+    ["POST /spaces/:id/recurring-transactions/process"]: {
+      tx: {
+        type: "recurring-tx-process-limits";
+        untilMs: number;
+      };
+      rx: null;
+    };
   };
 }

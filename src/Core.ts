@@ -30,6 +30,12 @@ export type MatchingRule = {
 };
 
 /**
+ * This internal type is necessary for referencing the MatchingRule type within lower namespaces,
+ * since there are conflicing `MatchingRule` types in those namespaces.
+ */
+type MatchingRuleType = MatchingRule;
+
+/**
  * A template for a transaction
  */
 export type TransactionTemplate = {
@@ -157,7 +163,7 @@ export namespace Attributes {
   };
 
   export type MatchingRule = {
-    value: MatchingRule;
+    value: MatchingRuleType;
   };
 
   export type Membership = {
@@ -179,7 +185,7 @@ export namespace Attributes {
     description: string;
     amountBaseUnits: number;
     startTimeMs: number;
-    matchingRule: MatchingRule;
+    matchingRule: MatchingRuleType;
     recurrence: Recurrence;
   };
 
@@ -229,7 +235,7 @@ export namespace Attributes {
     description: string | null;
     amountBaseUnits: number;
     timestampMs: number;
-    matchingRule: MatchingRule;
+    matchingRule: MatchingRuleType;
   };
 }
 
@@ -413,6 +419,7 @@ export namespace Api {
         timestampMs?: number;
         amountBaseUnits: number;
         balanceBaseUnits: number;
+        expectedTxId?: string | null;
         splits: Array<{
           virtualAccountId: string;
           amountBaseUnits: number;
@@ -435,13 +442,13 @@ export namespace Api {
     };
 
     ["PATCH /transactions/:id"]: {
-      tx: TransactionTemplate & { type: "transaction-templates" };
+      tx: Partial<TransactionTemplate> & { type: "transaction-templates" };
       rx: Transaction;
     };
 
     ["POST /transactions/bulk-edit"]: {
       tx: {
-        transaction: TransactionTemplate & { type: "transaction-templates" };
+        transaction: Partial<TransactionTemplate> & { type: "transaction-templates" };
         selection: TransactionSelection;
       };
       rx: {
@@ -460,7 +467,7 @@ export namespace Api {
         description: string;
         timestampMs: number;
         amountBaseUnits: number;
-        matchingRule: MatchingRule;
+        matchingRule: MatchingRuleType;
       };
       rx: ExpectedTransaction;
     };

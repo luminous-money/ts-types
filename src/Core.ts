@@ -78,6 +78,67 @@ export type TransactionSelection =
       ids: Array<string>;
     };
 
+/** An object defining a daily recurrence */
+export type DailyRecurrence = {
+  type: "daily-recurrences";
+  /** Every x days */
+  interval: number;
+};
+
+/** An object defining a weekly recurrence */
+export type WeeklyRecurrence = {
+  type: "weekly-recurrences";
+  /** Every x weeks */
+  interval: number;
+  /** On these days */
+  dayList: { [k in "m" | "tu" | "w" | "th" | "f" | "sa" | "su"]?: 1 };
+};
+
+/** An object defining a monthly recurrence */
+export type MonthlyRecurrence = {
+  type: "monthly-recurrences";
+  /** Every x months */
+  interval: number;
+  /**
+   * On these days of the month
+   *
+   * This must be an array of numbers between 1 and 31. When a number higher than the last day of
+   * the month is specified, the number is coerced to be the last day of the given month.
+   */
+  dayList: Array<number>;
+};
+
+/** An object defining a yearly recurrence */
+export type YearlyRecurrence = {
+  type: "yearly-recurrences";
+  /** Recur in these months */
+  monthList: {
+    [k in
+      | "jan"
+      | "feb"
+      | "mar"
+      | "apr"
+      | "may"
+      | "jun"
+      | "jul"
+      | "aug"
+      | "sep"
+      | "oct"
+      | "nov"
+      | "dec"]?: 1;
+  };
+  /**
+   * On these days
+   *
+   * This must be an array of numbers between 1 and 31. When a number higher than the last day of
+   * the given month is specified, the number is coerced to be the last day of the given month.
+   */
+  dayList: Array<number>;
+};
+
+/** Aggregate of all types of recurrence */
+export type Recurrence = DailyRecurrence | WeeklyRecurrence | MonthlyRecurrence | YearlyRecurrence;
+
 /**
  * Attributes for the API data model. These are used in the database data model as well.
  */
@@ -113,65 +174,14 @@ export namespace Attributes {
     timestampMs: number;
   };
 
-  export type DailyRecurrence = {
-    rectype: "day";
-    recUnitInterval: number;
-    recStartTimeMs: number;
+  export type RecurringTransaction = {
+    algorithm: "fixed" | "seasonal" | "trailing" | "last";
+    description: string;
+    amountBaseUnits: number;
+    startTimeMs: number;
+    matchingRule: MatchingRule;
+    recurrence: Recurrence;
   };
-
-  export type WeeklyRecurrence = {
-    recType: "week";
-    recUnitInterval: number;
-    recUnitDayList: string;
-    recStartTimeMs: number;
-  };
-
-  export type MonthlyRecurrence = {
-    recType: "month";
-    recUnitInterval: number;
-    recUnitDayList: string;
-    recStartTimeMs: number;
-  };
-
-  export type YearlyRecurrence = {
-    recType: "year";
-    recUnitInterval: number;
-    recUnitDayList: string;
-    recMonths: string;
-    recStartTimeMs: number;
-  };
-
-  export type Recurrence =
-    | DailyRecurrence
-    | WeeklyRecurrence
-    | MonthlyRecurrence
-    | YearlyRecurrence;
-
-  export type FixedRecurringTransaction = Recurrence & {
-    name: string;
-    templateJson: string;
-    type: "fixed";
-  };
-
-  export type AdaptiveEstimatedRecurringTransaction = Recurrence & {
-    name: string;
-    templateJson: string;
-    type: "adaptive";
-    nature: "estimated";
-    scope: "seasonal" | "trailing";
-  };
-
-  export type AdaptiveExactRecurringTransaction = Recurrence & {
-    name: string;
-    templateJson: string;
-    type: "adaptive";
-    nature: "exact";
-  };
-
-  export type RecurringTransaction =
-    | FixedRecurringTransaction
-    | AdaptiveEstimatedRecurringTransaction
-    | AdaptiveExactRecurringTransaction;
 
   export type Space = {
     name: string;
@@ -262,26 +272,11 @@ export namespace Api {
     lastMessage: { data: Message };
   };
 
-  declare type RecurringTransCommon = {
+  export type RecurringTransaction = Attributes.RecurringTransaction & {
     id: string;
     type: "recurring-transactions";
-    virtualAccount: ApiTypes.ToOneRelationship<"virtual-accounts">;
-    recurrence: Attributes.Recurrence;
+    cashAccount: ApiTypes.ToOneRelationship<"cash-accounts">;
   };
-  export type FixedRecurringTransaction = RecurringTransCommon &
-    Attributes.FixedRecurringTransaction & { type: "fixed-recurring-transactions" };
-  export type AdaptiveEstimatedRecurringTransaction = RecurringTransCommon &
-    Attributes.AdaptiveEstimatedRecurringTransaction & {
-      type: "adaptive-estimated-recurring-transactions";
-    };
-  export type AdaptiveExactRecurringTransaction = RecurringTransCommon &
-    Attributes.AdaptiveExactRecurringTransaction & {
-      type: "adaptive-exact-recurring-transactions";
-    };
-  export type RecurringTransaction =
-    | FixedRecurringTransaction
-    | AdaptiveEstimatedRecurringTransaction
-    | AdaptiveExactRecurringTransaction;
 
   export type Space = Attributes.Space & {
     id: string;
@@ -473,6 +468,21 @@ export namespace Api {
     ["GET /expected-transactions"]: {
       filter: {
         status?: ExpectedTransaction["status"];
+      };
+    };
+
+    /**
+     * Recurring Transactions
+     */
+
+    ["POST /recurring-transactions"]: {
+      tx: { type: "recurring-transactions" } & Attributes.RecurringTransaction;
+      rx: RecurringTransaction;
+    };
+
+    ["GET /recurring-transactions"]: {
+      filter: {
+        startTimeMs: ["<" | ">" | "=" | "<=" | ">=", number];
       };
     };
   };

@@ -496,6 +496,7 @@ export namespace Api {
     ["POST /cash-accounts/:id/recurring-transactions/process"]: {
       tx: {
         type: "recurring-tx-process-limits";
+        fromMs: number;
         untilMs: number;
       };
       rx: null;
@@ -504,6 +505,7 @@ export namespace Api {
     ["POST /spaces/:id/recurring-transactions/process"]: {
       tx: {
         type: "recurring-tx-process-limits";
+        fromMs: number;
         untilMs: number;
       };
       rx: null;

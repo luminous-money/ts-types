@@ -1,12 +1,22 @@
 import { Api as ApiTypes } from "@wymp/types";
 
 /**
- * A matching rule. The match score of a rule is calculated against a given transaction by
+ * Matching clauses. The match score of a rule is calculated against a given transaction by
  * calculating the match percentage of each individual given component (date, desc or price),
- * summing those numbers, then dividing them by the 10,000 times the number of components present.
+ * summing those numbers, then dividing them by 10,000 times the number of components present.
  * This gives us a percentage (0 to 100) indicating the final match score for the given rule.
  */
-export type MatchingRule = {
+export type MatchingClauses = {
+  /**
+   * A disqualifying clause that, if specified, requires the transaction to be on the specified
+   * side
+   */
+  side?: "credit" | "debit";
+
+  /**
+   * A disqualifying clause matching either a date range or a date radius (e.g., "within 7 days
+   * of..."). If the tx's date is within the range, it is scored. Otherwise, the rule is discarded.
+   */
   date?:
     | {
         t: "proximal-date";
@@ -18,16 +28,44 @@ export type MatchingRule = {
         from: number;
         to: number;
       };
+
+  /**
+   * A non-disqualifying clause specifying a description to match. If the clause matches, this
+   * increases the score of this rule. Otherwise, there is no penalty for not matching.
+   */
   desc?: {
     term: string;
     regexp: boolean;
   };
+
+  /**
+   * A non-disqualifying clause specifying a price range to match. If the clause matches, this
+   * increases the score of this rule. Otherwise, there is no penalty for not matching.
+   */
   price?: {
     centerBaseUnits: number;
     radiusBaseUnits: number;
   };
+};
+
+/**
+ * A transaction matching rule.
+ */
+export type TransactionMatchingRule = MatchingClauses & {
+  t: "transaction-matching-rules";
   template: TransactionTemplate;
 };
+
+/**
+ * A tag matching rule. These rules are used to apply tags to transactions. Multiple tag matching
+ * rules may match a single transaction.
+ */
+export type TagMatchingRule = MatchingClauses & {
+  t: "tag-matching-rules";
+  tags: Array<string>;
+};
+
+export type MatchingRule = TransactionMatchingRule | TagMatchingRule;
 
 /**
  * This internal type is necessary for referencing the MatchingRule type within lower namespaces,
@@ -42,16 +80,18 @@ export type TransactionTemplate = {
   description?: string;
   splits: Array<SplitTemplate>;
   tags?: Array<string>;
+  isTransfer?: boolean;
 };
 
 /**
- * A split template indicating various parameters of a split
+ * A split template indicating various parameters of a split. Note that "splits templates" (i.e.,
+ * _arrays_ of split templates) are understood to represent _one side_ of a transaction. The side
+ * of the splits is determined by the transaction amount. If the amount is negative, the splits
+ * are created as debit splits; if the amount is positive, they are created as credit splits.
  */
 export type SplitTemplate = {
   /** The id of the virtual account for this split */
   virtualAccountId: string;
-  /** Whether this split is a credit or a debit against the given virtual account */
-  side: "credit" | "debit";
   /**
    * If unit is "%", a value from 0 to 100 indicating what percent of the total value of the tx this
    * split should consume. If unit is "$", a monetary value in base units. If "rest", this split
@@ -185,7 +225,7 @@ export namespace Attributes {
     description: string;
     amountBaseUnits: number;
     startTimeMs: number;
-    matchingRule: MatchingRuleType;
+    matchingRule: TransactionMatchingRule;
     recurrence: Recurrence;
   };
 
@@ -235,7 +275,7 @@ export namespace Attributes {
     description: string | null;
     amountBaseUnits: number;
     timestampMs: number;
-    matchingRule: MatchingRuleType;
+    matchingRule: TransactionMatchingRule;
   };
 }
 
@@ -467,7 +507,7 @@ export namespace Api {
         description: string;
         timestampMs: number;
         amountBaseUnits: number;
-        matchingRule: MatchingRuleType;
+        matchingRule: TransactionMatchingRule;
       };
       rx: ExpectedTransaction;
     };

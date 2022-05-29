@@ -387,6 +387,16 @@ export namespace Api {
    * possible filter values that can be passed to the endpoint.
    */
   export type Endpoints = {
+    /**
+     *
+     *
+     *
+     * Cash Accounts
+     *
+     *
+     *
+     */
+
     ["POST /cash-accounts"]: {
       tx: {
         type: "debit-accounts" | "credit-accounts";
@@ -410,6 +420,15 @@ export namespace Api {
       rx: CashAccount;
     };
 
+    /**
+     *
+     *
+     *
+     * Spaces
+     *
+     *
+     *
+     */
     ["POST /spaces"]: {
       tx: {
         type: "spaces";
@@ -417,6 +436,16 @@ export namespace Api {
       };
       rx: Space;
     };
+
+    /**
+     *
+     *
+     *
+     * Users
+     *
+     *
+     *
+     */
 
     /**
      * NOTE: This endpoint is intended to be used internally by the gateway service. Therefore
@@ -431,6 +460,16 @@ export namespace Api {
       };
     };
 
+    /**
+     *
+     *
+     *
+     * Virtual Accounts
+     *
+     *
+     *
+     */
+
     ["POST /virtual-accounts"]: {
       tx:
         | {
@@ -441,11 +480,31 @@ export namespace Api {
         | {
             type: "goal-accounts";
             name: string;
-            targetAmountBaseUnits?: number | null;
+            targetAmountBaseUnits: number;
             targetDateMs?: number | null;
           };
       rx: VirtualAccount;
     };
+
+    ["POST /cash-accounts/:id/recalculate-budget-targets"]: {
+      tx:
+        | { type: "null" }
+        | {
+            type: "budget-recalculation-params";
+            targetMonthMs: number;
+          };
+      rx: null;
+    };
+
+    /**
+     *
+     *
+     *
+     * Transactions
+     *
+     *
+     *
+     */
 
     /**
      * NOTE: This endpoint is generally not intended to be used for "external" transactions, i.e.,
@@ -498,7 +557,13 @@ export namespace Api {
     };
 
     /**
+     *
+     *
+     *
      * Expected Transactions
+     *
+     *
+     *
      */
 
     ["POST /expected-transactions"]: {
@@ -519,7 +584,13 @@ export namespace Api {
     };
 
     /**
+     *
+     *
+     *
      * Recurring Transactions
+     *
+     *
+     *
      */
 
     ["POST /recurring-transactions"]: {

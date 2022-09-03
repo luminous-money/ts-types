@@ -256,6 +256,7 @@ export namespace Attributes {
     targetDateMs: number | null;
     targetAmountBaseUnits: number | null;
     balanceBaseUnits: number;
+    archivedMs: number | null;
   };
 
   export type Transaction = {
@@ -348,6 +349,13 @@ export namespace Api {
     cashAccount: ApiTypes.ToOneRelationship<"cash-accounts">;
   };
 
+  export type VirtualAccountRelationship = {
+    id: string;
+    type: "virtual-account-relationships";
+    parent: ApiTypes.ToOneRelationship<"virtual-accounts">;
+    child: ApiTypes.ToOneRelationship<"virtual-accounts">;
+  };
+
   export type Transaction = Attributes.Transaction & {
     id: string;
     type: "transactions";
@@ -375,6 +383,7 @@ export namespace Api {
     | Split
     | User
     | VirtualAccount
+    | VirtualAccountRelationship
     | Transaction;
 
   /**
@@ -494,6 +503,33 @@ export namespace Api {
             targetMonthMs: number;
           };
       rx: null;
+    };
+
+    /**
+     *
+     *
+     *
+     * Virtual Account Relationships
+     *
+     *
+     *
+     */
+
+    ["POST /cash-accounts/:id/virtual-account-relationships"]: {
+      tx: Array<{
+        type: "virtual-account-relationships";
+        parent: { type: "virtual-accounts"; id: string };
+        child: { type: "virtual-accounts"; id: string };
+      }>;
+      rx: Array<Api.VirtualAccountRelationship>;
+    };
+
+    ["GET /cash-accounts/:id/virtual-account-relationships"]: {
+      rx: Array<Api.VirtualAccountRelationship>;
+    };
+
+    ["DELETE /cash-accounts/:id/virtual-account-relationships/:id"]: {
+      rx: Array<Api.VirtualAccountRelationship>;
     };
 
     /**

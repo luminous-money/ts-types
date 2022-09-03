@@ -497,6 +497,24 @@ export namespace Api {
       rx: VirtualAccount;
     };
 
+    ["PATCH /virtual-accounts"]: {
+      tx:
+        | {
+            type: "budget-accounts";
+            name?: string;
+            targetAmountBaseUnits?: number | null;
+            archivedMs?: number | null;
+          }
+        | {
+            type: "goal-accounts";
+            name?: string;
+            targetAmountBaseUnits?: number;
+            targetDateMs?: number | null;
+            archivedMs?: number | null;
+          };
+      rx: VirtualAccount;
+    };
+
     ["POST /cash-accounts/:id/recalculate-budget-targets"]: {
       tx:
         | { type: "null" }

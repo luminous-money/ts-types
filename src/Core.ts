@@ -485,12 +485,14 @@ export namespace Api {
             type: "budget-accounts";
             name: string;
             targetAmountBaseUnits?: number | null;
+            archivedMs?: number | null;
           }
         | {
             type: "goal-accounts";
             name: string;
             targetAmountBaseUnits: number;
             targetDateMs?: number | null;
+            archivedMs?: number | null;
           };
       rx: VirtualAccount;
     };

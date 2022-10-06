@@ -515,6 +515,31 @@ export namespace Api {
       rx: VirtualAccount;
     };
 
+    /**
+     * Delete or archive a virtual account
+     *
+     * If a replacement is specified, move all children and/or transactions over to that account.
+     *
+     * It is an error to attempt to archive an account with an outstanding balance or delete an
+     * account with an outstanding balance without specifying a replacement account. In these cases,
+     * you should manually clear the balance before attempting the operation (or in the case of a
+     * deletion, supply a replacement account).
+     *
+     * It is an error to attempt to archive or delete an account that has children without
+     * specifying a replacement account.
+     */
+    ["DELETE /virtual-accounts/:id"]: {
+      tx: {
+        type: "delete-specs";
+        action: "archive" | "delete";
+        replacement?: null | {
+          type: "virtual-accounts";
+          id: string;
+        };
+      };
+      rx: null;
+    };
+
     ["POST /cash-accounts/:id/recalculate-budget-targets"]: {
       tx:
         | { type: "null" }

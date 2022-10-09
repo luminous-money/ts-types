@@ -479,6 +479,10 @@ export namespace Api {
      *
      */
 
+    ["GET /virtual-accounts"]: {
+      rx: Array<VirtualAccount>;
+    };
+
     ["POST /virtual-accounts"]: {
       tx:
         | {
@@ -536,14 +540,35 @@ export namespace Api {
       rx: null;
     };
 
-    ["POST /cash-accounts/:id/recalculate-budget-targets"]: {
-      tx:
-        | { type: "null" }
-        | {
-            type: "budget-recalculation-params";
-            targetMonthMs: number;
-          };
-      rx: null;
+    /**
+     * Manually trigger recalculating of budget amounts for virtual accounts, returning the updated
+     * list of accounts. Optionally filtered by the provided virtual accounts.
+     */
+    ["POST /virtual-accounts/recalculate-budget-targets"]: {
+      tx: {
+        type: "budget-recalculation-params";
+        targetMonthMs?: number;
+        virtualAccounts?: Array<string>;
+      };
+      rx: Array<VirtualAccount>;
+    };
+
+    /**
+     * Manually rebalance virtual accounts
+     *
+     * Occasionally, virtual account balances may get out of whack, e.g., go negative or otherwise
+     * not make sense. This endpoint manually calls the rebalance function to return these accounts
+     * to a "sensible" state.
+     *
+     * Functionality may be filtered for specific accounts. Returns the full list of virtual
+     * accounts, optionally reduced by the provided filter.
+     */
+    ["POST /virtual-accounts/rebalance"]: {
+      tx: {
+        type: "accts-rebalance-params";
+        virtualAccounts?: Array<string>;
+      };
+      rx: Array<VirtualAccount>;
     };
 
     /**

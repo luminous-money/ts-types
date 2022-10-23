@@ -541,8 +541,14 @@ export namespace Api {
     };
 
     /**
-     * Manually trigger recalculating of budget amounts for virtual accounts, returning the updated
-     * list of accounts. Optionally filtered by the provided virtual accounts.
+     * Manually trigger recalculating of budget amounts for virtual accounts, returning the accounts
+     * that were updated. Accounts for which recalculating occurs can optionally be filtered by
+     * providing a list of virtual account ids.
+     *
+     * You may want to call this endpoint if, for example, you have not updated your account records
+     * for a long time and all of a sudden submitted a large collection of records. In such a case
+     * the calculated targets may have been calculated against non-existent data and therefore may
+     * be off. This endpoint allows you to try again after updating the data.
      */
     ["POST /virtual-accounts/recalculate-budget-targets"]: {
       tx: {
@@ -560,14 +566,22 @@ export namespace Api {
      * not make sense. This endpoint manually calls the rebalance function to return these accounts
      * to a "sensible" state.
      *
-     * Functionality may be filtered for specific accounts. Returns the full list of virtual
-     * accounts, optionally reduced by the provided filter.
+     * Functionality may be filtered for specific accounts. Returns the list of affected accounts.
      */
-    ["POST /virtual-accounts/rebalance"]: {
+    ["POST /virtual-accounts/fix-negatives"]: {
       tx: {
-        type: "accts-rebalance-params";
+        type: "fix-negatives-params";
         virtualAccounts?: Array<string>;
       };
+      rx: Array<VirtualAccount>;
+    };
+
+    /**
+     * Manually redistribute funds from safe-to-spend according to the standard income distribution
+     * algorithm. There are no input parameters. Returns the list of affected accounts, if any.
+     */
+    ["POST /virtual-accounts/redistribute"]: {
+      tx: null;
       rx: Array<VirtualAccount>;
     };
 
